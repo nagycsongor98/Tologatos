@@ -16,6 +16,7 @@ typedef struct node
 	int h;
 	int f;
 	struct node* parent;
+	int back;
 }node;
 
 void print(int**);
@@ -40,7 +41,7 @@ string fileName;
 bool solseq = false;
 
 bool pcost = false;
-int counter = 0;
+int pcostCounter = 0;
 
 bool nvisited = false;
 int nvisitedCounter = 0;
@@ -87,91 +88,22 @@ int main(int argc, const char** argv)
 	}
 	if (readFromFile) {
 		readFile();
-		print(table);
+		//print(table);
 	}
 	else {
 		cout << "insert data\n";
 		readKeyboard();
-		print(table);
+		//print(table);
 	}
 
 	aStar();
 
 	if (pcost) {
-		cout << "The cost of the solution:" << counter << endl;
+		cout << "The cost of the solution:" << pcostCounter << endl;
 	}
 	if (nvisited) {
 		cout << "The visited nodes number:" << nvisitedCounter << endl;
 	}
-
-	//node elso;
-	//elso.table = table;
-	//elso.f = 3;
-	//elso.g = 555;
-	//elso.h = 4;
-	//elso.parent = NULL;
-
-	//node masodik;
-	//masodik.table = table;
-	//masodik.f = 10;
-	//masodik.g = 35;
-	//masodik.h = 43;
-	//masodik.parent = &elso;
-
-	////cout << "jooohgho " << masodik.parent->g;
-	//OPEN.push_front(elso);
-	//OPEN.push_front(masodik);
-	//cout << "open: " << OPEN.size() << endl;
-	//cout << "close: "<<CLOSE.size() << endl;
-
-	//for (auto& v : OPEN)
-	//{
-	//	cout << v.f<<endl;
-	//}
-	//
-	//for (list<node>::const_iterator itr = OPEN.cbegin(); itr != OPEN.end(); itr++)
-	//{
-	//	// remove strings having length 5
-	//	if (itr->g == 555)
-	//	{
-	//		// decrement iterator after it is passed to erase()
-	//		// but before erase() is executed 
-	//		OPEN.erase(itr--);
-	//	}
-	//}
-
-	//cout << "open: " << OPEN.size() << endl;
-	//cout << "close: " << CLOSE.size() << endl;
-
-	//for (auto& v : OPEN)
-	//{
-	//	cout << v.f << " ";
-	//}
-
-	/*node start;
-	start.id = idCouter++;
-	start.table = table;
-	start.g = 0;
-	start.h = heuristic_cost_1(table);
-	start.f = start.g + start.h;
-	start.parent = NULL;
-	OPEN.push_front(start);
-	table[0][0] = 55;
-	OPEN.push_front(createNode(&start));
-	table[0][0] = 66;
-	OPEN.push_front(createNode(&start));
-
-	for (auto& v : OPEN)
-	{
-		printf("\n");
-		for (int i = 0; i < n; i++) {
-			for (int j = 0; j < n; j++) {
-				printf("%5d ", v.table[i][j]);
-			}
-			printf("\n");
-		}
-		printf("\n%d\n", v.f);
-	}*/
 
 	return 0;
 }
@@ -295,17 +227,21 @@ bool aStar() {
 	node start;
 	start.id = idCouter++;
 	start.table = table;
-	start.g = heuristic_cost_1(table);
+	start.g = 0;
 	start.h = heuristic_cost_1(table);
 	start.f = start.g + start.h;
 	start.parent = NULL;
+	start.back = -1;
 	OPEN.push_front(start);
 	node N, NCHILD, X;
-	while (OPEN.size()<50)
+	while (OPEN.size())
 	{
 		N = getNodeFromOpenWithTheLowestF();
+		remove(OPEN, &N);
 		CLOSE.push_front(N);
+		nvisitedCounter++;
 		if (N.h == 0) {
+			pcostCounter = N.g;
 			print(N.table);
 			return true;
 		}
@@ -316,6 +252,7 @@ bool aStar() {
 			if (NCHILD.h < 0) {
 				continue;
 			}
+			
 			X = find(OPEN, &NCHILD);
 			if (X.h >= 0) {
 				if (X.f <= NCHILD.f) {
@@ -337,7 +274,7 @@ bool aStar() {
 			}
 			OPEN.push_front(NCHILD);
 		}
-		cout << "-------------------\n";
+		/*cout << "-------------------\n";
 		for (auto& v : OPEN)
 		{
 			printf("\n");
@@ -350,7 +287,7 @@ bool aStar() {
 			printf("\nH %d\n", v.h);
 			printf("\nF %d\n", v.f);
 		}
-		cout << "-------------------\n";
+		cout << "-------------------\n";*/
 	}
 	return false;
 }
@@ -358,6 +295,9 @@ bool aStar() {
 node createNode(node* par, int direction) {
 	node res;
 	res.h = -1;
+	if (direction == par->back) {
+		return res;
+	}
 	int x, y;
 	int** aux = new int* [n];
 	for (int i = 0; i < n; i++) {
@@ -378,6 +318,7 @@ node createNode(node* par, int direction) {
 		if ((x - 1) >= 0) {
 			aux[x][y] = aux[x - 1][y];
 			aux[x - 1][y] = 0;
+			res.back = 1;
 		}
 		else {
 			return res;
@@ -387,6 +328,7 @@ node createNode(node* par, int direction) {
 		if ((x + 1) < n) {
 			aux[x][y] = aux[x + 1][y];
 			aux[x + 1][y] = 0;
+			res.back = 0;
 		}
 		else {
 			return res;
@@ -396,6 +338,7 @@ node createNode(node* par, int direction) {
 		if ((y - 1) >= 0) {
 			aux[x][y] = aux[x][y - 1];
 			aux[x][y - 1] = 0;
+			res.back = 3;
 		}
 		else {
 			return res;
@@ -405,6 +348,7 @@ node createNode(node* par, int direction) {
 		if ((y + 1) < n) {
 			aux[x][y] = aux[x][y + 1];
 			aux[x][y + 1] = 0;
+			res.back = 2;
 		}
 		else {
 			return res;
@@ -414,7 +358,7 @@ node createNode(node* par, int direction) {
 
 	res.id = idCouter++;
 	res.table = aux;
-	res.g = par->g;
+	res.g = (par->g) + 1;
 	res.h = heuristic_cost_1(aux);
 	res.f = res.g + res.h;
 	res.parent = par;
@@ -424,7 +368,7 @@ int  heuristic_cost_1(int** tab) {
 	int res = 0;
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < n; j++) {
-			if (tab[i][j] != n * i + j && tabtab[i][j] !=0) {
+			if (tab[i][j] != n * i + j && tab[i][j] !=0) {
 				res++;
 			}
 		}
@@ -436,8 +380,13 @@ node getNodeFromOpenWithTheLowestF() {
 	node res = OPEN.front();
 	for (auto& v : OPEN)
 	{
-		if (v.f < res.f) {
+		if (v.f < res.f) {	
 			res = v;
+		}
+		else if (v.f == res.f) {
+			if (v.h < res.h) {
+				res = v;
+			}
 		}
 	}
 
