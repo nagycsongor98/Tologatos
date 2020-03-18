@@ -27,10 +27,12 @@ bool goolState();
 bool aStar();
 node createNode(node*, int);
 int  heuristic_cost_1(int**);
+int  heuristic_cost_2(int**);
 node getNodeFromOpenWithTheLowestF();
 node find(list<node>&, node*);
 bool compare(int**, int**);
 void remove(list<node>&, node*);
+int manhattan(int** , int , int );
 
 int** table;
 int n,m;
@@ -88,15 +90,16 @@ int main(int argc, const char** argv)
 	}
 	if (readFromFile) {
 		readFile();
-		//print(table);
 	}
 	else {
 		cout << "insert data\n";
 		readKeyboard();
-		//print(table);
 	}
 
-	aStar();
+	if (!aStar()) {
+		cout << "No solution" << endl;
+		return 0;
+	}
 
 	if (pcost) {
 		cout << "The cost of the solution:" << pcostCounter << endl;
@@ -201,13 +204,16 @@ void readFile() {
 	myfile.close();
 }
 void readKeyboard() {
+	cout << "n = ";
 	cin >> n;
+	cout << endl;
 	table = new int* [n];
 	for (int i = 0; i < n; i++) {
 		table[i] = new int[n];
 	}
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < n; j++) {
+			cout << "table[" << i << "][" << j << "] = ";
 			cin >> table[i][j];
 		}
 	}
@@ -228,7 +234,12 @@ bool aStar() {
 	start.id = idCouter++;
 	start.table = table;
 	start.g = 0;
-	start.h = heuristic_cost_1(table);
+	if (H == 2) {
+		start.h = heuristic_cost_2(table);
+	}
+	else {
+		start.h = heuristic_cost_1(table);
+	}
 	start.f = start.g + start.h;
 	start.parent = NULL;
 	start.back = -1;
@@ -274,20 +285,6 @@ bool aStar() {
 			}
 			OPEN.push_front(NCHILD);
 		}
-		/*cout << "-------------------\n";
-		for (auto& v : OPEN)
-		{
-			printf("\n");
-			for (int i = 0; i < n; i++) {
-				for (int j = 0; j < n; j++) {
-					printf("%5d ", v.table[i][j]);
-				}
-				printf("\n");
-			}
-			printf("\nH %d\n", v.h);
-			printf("\nF %d\n", v.f);
-		}
-		cout << "-------------------\n";*/
 	}
 	return false;
 }
@@ -359,7 +356,12 @@ node createNode(node* par, int direction) {
 	res.id = idCouter++;
 	res.table = aux;
 	res.g = (par->g) + 1;
-	res.h = heuristic_cost_1(aux);
+	if (H == 2) {
+		res.h = heuristic_cost_2(aux);
+	}
+	else {
+		res.h = heuristic_cost_1(aux);
+	}
 	res.f = res.g + res.h;
 	res.parent = par;
 	return res;
@@ -371,6 +373,16 @@ int  heuristic_cost_1(int** tab) {
 			if (tab[i][j] != n * i + j && tab[i][j] !=0) {
 				res++;
 			}
+		}
+	}
+	return res;
+}
+
+int  heuristic_cost_2(int** tab) {
+	int res = 0;
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			res += manhattan(tab, i, j);
 		}
 	}
 	return res;
@@ -426,4 +438,38 @@ void remove(list<node>& container, node* x) {
 			break;
 		}
 	}
+}
+
+int manhattan(int** a, int x, int y) {
+	int i = x;
+	int j = y;
+	int res = 0;
+	while (true)
+	{
+		if (a[x][y] == (n * i) + j || a[x][y] == 0) {
+			break;
+		}
+		else if (a[x][y] > (n * i) + j) {
+			if (a[x][y] > (i + 1)* n - 1) {
+				res++;
+				i++;
+			}
+			else {
+				res++;
+				j++;
+			}
+		}
+		else {
+			if (a[x][y] < i * n) {
+				res++;
+				i--;
+			}
+			else {
+				res++;
+				j--;
+			}
+		}
+
+	}
+	return res;
 }
